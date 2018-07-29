@@ -54,6 +54,16 @@ public class ClientServer {
         } return false;
     }
 
+    public synchronized void sendPrivateMessage(ClientHandler name, String nickTo, String message) {
+        for(ClientHandler o : clients) {
+            if(o.getName().equals(nickTo)) {
+                o.sendMessage("от " + nickTo + ": " + message);
+                name.sendMessage("клиенту " + nickTo + ": " + message);
+                return;
+            }
+        }
+    }
+
     public synchronized void broadcastMessage(String message) {
         for(ClientHandler o : clients) {
             o.sendMessage(message);

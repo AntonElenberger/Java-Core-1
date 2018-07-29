@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import static ru.geekbrains.antonelenberger.lesson7.client.ClientWindow.*;
 
 public class ClientHandler {
 
@@ -27,6 +28,8 @@ public class ClientHandler {
             this.name = "";
             new Thread(() -> {
                 try {
+                    final int timeOut = 120;
+                    final long startTime = System.currentTimeMillis();
                     while (true) {
                         String auth = in.readUTF();
                         if (auth.startsWith("/auth")) {
@@ -44,15 +47,20 @@ public class ClientHandler {
                                 sendMessage("Неверный логин/пароль");
                             }
                         }
+                        final long endTime = System.currentTimeMillis();
+                        if((endTime - startTime) / 1000 > timeOut) {
+                            System.out.println("Closing socket");
+                            sendMessage(AUTHORIZE_TIMEOUT);
+                        }
                     }
                     while (true) {
                         String message = in.readUTF();
-                        if (message.startsWith("/w")) {
+                        if (message.startsWith("/w ")) {
                             String[] partsOfMessage = message.split("\\s");
                             String addrName = partsOfMessage[1];
-                            System.out.println("От" + name + " для: " + addrName + message);
+                            String privatMessage = message.substring(4 + addrName.length());
                             if ("/end".equals(message)) break;
-                            clientServer.broadcastMessage(name + "для " + addrName + ": " + message);
+                            clientServer.sendPrivateMessage(this, addrName, privatMessage);
                         } else {
                             System.out.println("От " + name + ": " + message);
                             if ("/end".equals(message)) break;
